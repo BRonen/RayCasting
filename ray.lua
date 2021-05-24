@@ -36,16 +36,20 @@ function Ray.lookAt(self, x, y)
   self.dir.y = y - self.pos.y;
 end
 
-function Ray.cast(self, target)
-  local x1 = target.x1;
-  local y1 = target.y1;
-  local x2 = target.x2;
-  local y2 = target.y2;
 
-  local x3 = self.pos.x;
-  local y3 = self.pos.y;
-  local x4 = self.pos.x + self.dir.x;
-  local y4 = self.pos.y + self.dir.y;
+local getPoints = {}
+getPoints['edge'] = function(obj) return obj.b:getWorldPoints(obj.s:getPoints()) end
+
+function Ray.cast(self, target)
+  if not getPoints[target.s:getType()] then
+    return
+  end
+  local x1, y1, x2, y2 = getPoints[target.s:getType()](target)
+
+  local x3 = self.pos.x
+  local y3 = self.pos.y
+  local x4 = self.pos.x + self.dir.x
+  local y4 = self.pos.y + self.dir.y
 
   local den = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
     if den == 0 then
