@@ -25,11 +25,11 @@ local walls
 
 local function createWalls(screenW, screenH)
   walls = {}
-  walls[#walls+1] = Wall:new(0, 10, screenW, 10)
-  walls[#walls+1] = Wall:new(10, 0, 10, screenH)
-  walls[#walls+1] = Wall:new(0, screenH - 10, screenW, screenH - 10)
-  walls[#walls+1] = Wall:new(screenW - 10, 0, screenW - 10, screenH)
-  for _=1,4 do
+  walls[#walls+1] = Wall:new(0, 0, screenW, 0)
+  walls[#walls+1] = Wall:new(0, 0, 0, screenH)
+  walls[#walls+1] = Wall:new(0, screenH, screenW, screenH)
+  walls[#walls+1] = Wall:new(screenW, 0, screenW, screenH)
+  for _=1, math.random(3, 5) do
     local x1 = math.random(screenW);
     local x2 = math.random(screenW);
     local y1 = math.random(screenH);

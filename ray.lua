@@ -19,6 +19,13 @@ function Ray:new(x, y, angle)
   return ray
 end
 
+function Ray.setAngle(self, angle)
+  self.dir = {
+    x = math.cos(angle),
+    y = math.sin(angle)
+  }
+end
+
 function Ray.setPosition(self, x, y)
   self.pos.x = x
   self.pos.y = y

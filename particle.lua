@@ -1,14 +1,5 @@
 local Ray = require('ray')
 
-local function normalize(x,y)
-  local l=(x*x+y*y)^.5
-  if l==0 then
-    return 0,0,0
-  else
-    return x/l,y/l,l
-  end
-end
-
 local function dist(xy1, xy2)
   local x1, y1 = xy1.x, xy1.y
   local x2, y2 = xy2.x, xy2.y
@@ -23,24 +14,51 @@ function Particle:new(x, y)
   setmetatable(particle, self)
   self.__index = self
 
-  particle.rays = {}
-
-  for a = 1, 360 do
-    local ray = Ray:new(x, y, math.rad(a))
-    particle.rays[#(particle.rays) + 1] = ray
-    print(ray)
-  end
-
-  particle.pos = {}
-
-  particle:setPosition(x, y)
-
-  particle.dir = {
-    x = 1,
-    y = 0
+  particle.pos = {
+    x = x,
+    y = y
   }
 
+  particle.angle = 0
+
+  particle.rays = {}
+
+  for a = -RAYNUMBER/2, RAYNUMBER/2 do
+    local ray = Ray:new(x, y, math.rad(a))
+    particle.rays[#(particle.rays) + 1] = ray
+  end
+
   return particle
+end
+
+function Particle.rotate(self, angle)
+  self.angle = self.angle + angle
+  local i = 1
+  for a = -RAYNUMBER/2, RAYNUMBER/2 do
+    self.rays[i]:setAngle(math.rad(a) + self.angle)
+    i = i + 1
+  end
+end
+
+function Particle.move(self, vel, axis)
+  local angle = self.angle
+  if axis then 
+    angle = angle + axis
+  end
+  local vec = {
+    x = math.cos(angle),
+    y = math.sin(angle)
+  }
+
+  local mag = math.sqrt(vec.x * vec.x + vec.y * vec.y)
+
+  vec.x = vec.x * vel / mag
+  vec.y = vec.y * vel / mag
+
+  self:setPosition(
+    self.pos.x + vec.x,
+    self.pos.y + vec.y
+  )
 end
 
 function Particle.cast(self, targets)
@@ -67,7 +85,7 @@ function Particle.cast(self, targets)
       end
     end
     if closest then
-      table.insert(pts, closest)
+      table.insert(pts, {closest, record})
     end
   end
   return pts
@@ -76,17 +94,8 @@ end
 function Particle.setPosition(self, x, y)
   self.pos.x = x
   self.pos.y = y
-  for i, ray in ipairs(self.rays) do
-    ray:setPosition(x, y)
-  end
-end
-
-function Particle.lookAt(self, x, y)
-  x, y = normalize(x, y)
-  self.dir.x = x
-  self.dir.y = y
   for _, ray in ipairs(self.rays) do
-    ray:lookAt(x, y)
+    ray:setPosition(x, y)
   end
 end
 
