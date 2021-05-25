@@ -1,77 +1,40 @@
-ScreenW, ScreenH = love.graphics.getDimensions()
+local screenW, screenH = love.graphics.getDimensions()
 
 local Particle = require('particle')
-local createGrid = require('grid')[2]
+local createGrid = require('grid')[1]
+local Rect = require('shapes.rect') 
 
 local intersections = {}
 
-local minimap = require('minimap')
+local minimap = require('minimap'):new()
 
 RAYNUMBER = 45
 RAYPRECISION = 2
 
-local Debug = false
+Debug = false
 math.randomseed(os.time()^2)
 
-local World = love.physics.newWorld(0, 0)
+local World
+local walls
+local Player
 
-local walls = createGrid(World)
-
-local Player = Particle:new(World, 500, 500)
-
-function love.load()
-end
+--function love.load()
+  World = love.physics.newWorld(0, 0)
+  walls = createGrid(World, screenW*2, screenH*2)
+  Player = Particle:new(World, 30, 30)
+--end
 
 function love.update(dt)
   local pts = Player:cast(walls)
   if pts then intersections = pts end
   Player:update(dt)
   World:update(dt)
-  --[[local id = love.touch.getTouches( )[1]
-  if id then
-    local x, y = love.touch.getPosition( id )
-    if
-      x > 100 and x < 200 and
-      y > ScreenH-200 and y < ScreenH-100
-    then Player:move(vel) end --up
-    if
-      x > 100 and x < 200 and
-      y > ScreenH-100 and y < ScreenH
-    then Player:move(-vel) end --down
-    if
-      x > 000 and x < 100 and
-      y > ScreenH-100 and y < ScreenH
-    then Player:rotate(-0.05) end --left
-    if
-      x > 200 and x < 300 and
-      y > ScreenH-100 and y < ScreenH
-    then Player:rotate(0.05) end --right
-  end
-  if Debug then
-    local mx, my = love.mouse.getPosition( )
-    if
-      mx > 100 and mx < 200 and
-      my > ScreenH-200 and my < ScreenH-100
-    then Player:move(vel) end --up
-    if
-      mx > 100 and mx < 200 and
-      my > ScreenH-100 and my < ScreenH
-    then Player:move(-vel) end --down
-    if
-      mx > 000 and mx < 100 and
-      my > ScreenH-100 and my < ScreenH
-    then Player:rotate(-0.05) end --left
-    if
-      mx > 200 and mx < 300 and
-      my > ScreenH-100 and my < ScreenH
-    then Player:rotate(0.05) end --right
-  end]]
 
   if minimap then 
-    minimap.canvas:renderTo(function()
+    minimap:renderTo(function()
       local width, height = minimap.canvas:getDimensions()
       love.graphics.setColor(0, 0, 0, 1)
-      love.graphics.rectangle('fill', 0, 0, ScreenW, ScreenH)
+      love.graphics.rectangle('fill', 0, 0, screenW, screenH)
       love.graphics.setColor(1,1,1,1)
       love.graphics.push()
             
@@ -83,11 +46,11 @@ function love.update(dt)
       love.graphics.scale(1/Scale)
       love.graphics.translate(-tx, -ty)
       for _, wall in ipairs(walls) do
-        wall:draw()
+        wall:draw2d()
       end
       for _, intersection in ipairs(intersections) do
-        local pt, d = intersection[1], intersection[2]
-        if d then
+        if intersection then
+          local pt, d = intersection[1], intersection[2]
           love.graphics.setColor(100/d*2, 100/d*2, 100/d*2)
           love.graphics.line(Player.b:getX(), Player.b:getY(), pt.x, pt.y)
           love.graphics.circle('line', pt.x, pt.y, 5)
@@ -101,91 +64,103 @@ function love.update(dt)
 end
 
 function love.draw()
-  local pixelwidth = ScreenW/(RAYNUMBER*RAYPRECISION)
+  local pixelwidth = screenW/(RAYNUMBER*RAYPRECISION)
   for i, intersection in ipairs(intersections) do
-    local pt, d = intersection[1], intersection[2]
-    if d then
-      local width = ScreenH*100/d
-      love.graphics.setColor(100/d, 100/d, 100/d)
-      love.graphics.rectangle('fill', pixelwidth*(i-1), (ScreenH - width) / 2, pixelwidth, width)
-      love.graphics.setColor(0, 0, 0)
-      love.graphics.rectangle('line', pixelwidth*(i-1), (ScreenH - width) / 2, pixelwidth, width)
-      love.graphics.setColor(1, 1, 1, 1)
+    if intersection then
+      intersection[3]:draw3d(intersection[2], i)
     end
   end
 
   if minimap then minimap:draw() end
 
-  --[[do GUI
+  do
     local id = love.touch.getTouches( )[1]
     if id or Debug then
       love.graphics.setColor(1, 0, 0, 0.3)
-      local x, y = 100, ScreenH-200 --up
+      local x, y = 100, screenH-200 --up
       love.graphics.rectangle("fill",
         x, y,
         100, 100
       )
 
-      x, y = 100, ScreenH-100 --down
+      x, y = 100, screenH-100 --down
       love.graphics.rectangle("fill",
         x, y,
         100, 100
       )
 
-      x, y = 0, ScreenH-100 --left
+      x, y = 0, screenH-100 --left
       love.graphics.rectangle("fill",
         x, y,
         100, 100
       )
 
-      x, y = 200, ScreenH-100 --right
+      x, y = 200, screenH-100 --right
       love.graphics.rectangle("fill",
         x, y,
         100, 100
       )
       --borders
       love.graphics.setColor(0, 0, 0, 0.8)
-      x, y = 100, ScreenH-200 --up
+      x, y = 100, screenH-200 --up
       love.graphics.rectangle("line",
         x, y,
         100, 100
       )
 
-      x, y = 100, ScreenH-100 --down
+      x, y = 100, screenH-100 --down
       love.graphics.rectangle("line",
         x, y,
         100, 100
       )
 
-      x, y = 0, ScreenH-100 --left
+      x, y = 0, screenH-100 --left
       love.graphics.rectangle("line",
         x, y,
         100, 100
       )
 
-      x, y = 200, ScreenH-100 --right
+      x, y = 200, screenH-100 --right
       love.graphics.rectangle("line",
         x, y,
         100, 100
       )
       love.graphics.setColor(1, 1, 1, 1)
     end
-  end]]
+  end
   
-  love.graphics.print('FPS: ' .. love.timer.getFPS(), 32, ScreenH-30)
-  love.graphics.print('Memory usage: ' .. math.floor(collectgarbage 'count') .. 'kb', 150, ScreenH-30)
+  love.graphics.print('FPS: ' .. love.timer.getFPS(), 32, screenH-30)
+  love.graphics.print('Memory usage: ' .. math.floor(collectgarbage 'count') .. 'kb', 150, screenH-30)
 end
 
 
-function love.mousemoved(x, y)
+function love.mousepressed(cx, cy)
+  local px, py = Player.b:getPosition()
+
+  --vectors
+  local angle = Player.angle
+  local vec = {
+    x = math.cos(-angle),
+    y = math.sin(-angle)
+  }
+
+  --fix collision of shot with player
+  local x = vec.x < 0 and -5 or 5
+  local y = vec.y < 0 and -5 or 5
+
+  --local shot = Rect:new(World, px, py, 5, 5, true)
+
+  --shot.b:applyForce(vec.y*100, vec.y*100)
+
+  --table.insert(walls, shot)
 end
 
 function love.touchpressed( _, x, y)
 end
 
 function love.resize(width, heigth)
-  ScreenW, ScreenH = width, heigth
-  walls = createGrid()
+  screenW, screenH = width, heigth
+  minimap:resize(width, heigth)
 end
 
 function love.keypressed(key)

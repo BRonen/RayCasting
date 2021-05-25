@@ -1,37 +1,41 @@
-local Line = require('line')[1]
+local Line = require('shapes.line')
+local Rect = require('shapes.rect')
 
-local Rect = {}
-
-function Rect:new(world, x, y, w, h)
+local function createLines(world, w, h)
   local lines = {}
-
-  setmetatable(lines, self)
-  self.__index = self
-  lines[#lines + 1] = Line:new(world, x, y, x+w, y)
-  lines[#lines + 1] = Line:new(world, x+w, y, x+w, y+h)
-  lines[#lines + 1] = Line:new(world, x+w, y+h, x, y+h)
-  lines[#lines + 1] = Line:new(world, x, y+h, x, y)
-  lines.w, lines.h = w, h
-  lines.x, lines.y = x, y
-
+  lines[#lines+1] = Line:new(world, 0, 0, w, 0)
+  lines[#lines+1] = Line:new(world, 0, 0, 0, h)
+  lines[#lines+1] = Line:new(world, 0, h, w, h)
+  lines[#lines+1] = Line:new(world, w, 0, w, h)
+  for _=1, math.random(3, 5) do
+    local x1 = math.random(w)
+    local x2 = math.random(w)
+    local y1 = math.random(h)
+    local y2 = math.random(h)
+    lines[#lines + 1] = Line:new(world, x1, y1, x2, y2)
+  end
   return lines
 end
 
-function Rect.draw(self)
-  love.graphics.rectangle('line', self.x, self.y, self.w, self.h)
-end
-
-local function createGrid(world, screenW, screenH)
+local function createGrid(world, w, h)
   local grid = {}
 
   grid[#grid + 1] = Rect:new(world, 100, 100, 10, 10)
-  grid[#grid + 1] = Rect:new(world, 150, 150, 100, 100)
+  grid[#grid + 1] = Rect:new(world, 150, 150, 100, 100, true)
 
-  local width, heigth = love.graphics.getDimensions()
-
-  grid[#grid + 1] = Rect:new(world, 0, 0, width, heigth)
+  grid[#grid+1] = Line:new(world, 0, 0, w, 0)
+  grid[#grid+1] = Line:new(world, 0, 0, 0, h)
+  grid[#grid+1] = Line:new(world, 0, h, w, h)
+  grid[#grid+1] = Line:new(world, w, 0, w, h)
+  for _=1, math.random(3, 5) do
+    local x1 = math.random(w)
+    local x2 = math.random(w)
+    local y1 = math.random(h)
+    local y2 = math.random(h)
+    grid[#grid + 1] = Line:new(world, x1, y1, x2, y2)
+  end
 
   return grid
 end
 
-return {Rect, createGrid}
+return {createGrid, createLines}

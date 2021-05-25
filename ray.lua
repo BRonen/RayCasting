@@ -36,34 +36,47 @@ function Ray.lookAt(self, x, y)
   self.dir.y = y - self.pos.y;
 end
 
-
-local getPoints = {}
-getPoints['edge'] = function(obj) return obj.b:getWorldPoints(obj.s:getPoints()) end
-
 function Ray.cast(self, target)
-  if not getPoints[target.s:getType()] then
-    return
+  local x1 = self.pos.x
+  local y1 = self.pos.y
+  local x2 = self.pos.x + self.dir.x
+  local y2 = self.pos.y + self.dir.y
+
+  local _, _, f = target.f:rayCast( x1, y1, x2, y2, 1/0, target.b:getPosition(), 0, 0)
+
+  local HitX
+  local HitY
+
+  if f then
+    HitX = x1 + (x2 - x1) * f
+    HitY = y1 + (y2 - y1) * f
   end
-  local x1, y1, x2, y2 = getPoints[target.s:getType()](target)
 
-  local x3 = self.pos.x
-  local y3 = self.pos.y
-  local x4 = self.pos.x + self.dir.x
-  local y4 = self.pos.y + self.dir.y
+  if HitX and HitY then
+    return {
+      x = HitX,
+      y = HitY,
+      fixture = target
+    }
+  else
+    return false
+  end
 
+  --[[ This is the hard way to do O_o
   local den = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
-    if den == 0 then
-      return false
-    end
+  if den == 0 then
+    return false
+  end
 
-    local t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / den
-    local u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / den
-    if t > 0 and t < 1 and u > 0 then
-      local pt = {}
-      pt.x = math.floor(x1 + t * (x2 - x1))
-      pt.y = math.floor(y1 + t * (y2 - y1))
-      return pt
-    else return false end
+  local t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / den
+  local u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / den
+  if t > 0 and t < 1 and u > 0 then
+    local pt = {}
+    pt.x = math.floor(x1 + t * (x2 - x1))
+    pt.y = math.floor(y1 + t * (y2 - y1))
+    return pt
+  else return false end
+  ]]
 end
 
 function Ray.draw(self)

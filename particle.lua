@@ -30,7 +30,7 @@ function Particle:new(world, x, y)
 
   function particle:update(dt)
     self.b:setLinearVelocity(0,0)
-    local vel = 90*dt
+    local vel = 80*dt
     if love.keyboard.isDown('w') then
       self:move(vel)
     end
@@ -44,10 +44,51 @@ function Particle:new(world, x, y)
       self:move(-vel, -90)
     end
     if love.keyboard.isDown('q') then
-      self:rotate(-0.05)
+      self:rotate(-0.02)
     end
     if love.keyboard.isDown('e') then
-      self:rotate(0.05)
+      self:rotate(0.02)
+    end
+
+    local id = love.touch.getTouches( )[1]
+    if id then
+      local _, screenH = love.graphics.getDimensions()
+      local x, y = love.touch.getPosition( id )
+      if
+        x > 100 and x < 200 and
+        y > screenH-200 and y < screenH-100
+      then self:move(vel) end --up
+      if
+        x > 100 and x < 200 and
+        y > screenH-100 and y < screenH
+      then self:move(-vel) end --down
+      if
+        x > 000 and x < 100 and
+        y > screenH-100 and y < screenH
+      then self:rotate(-0.05) end --left
+      if
+        x > 200 and x < 300 and
+        y > screenH-100 and y < screenH
+      then self:rotate(0.05) end --right
+    end
+    if Debug then
+      local mx, my = love.mouse.getPosition( )
+      if
+        mx > 100 and mx < 200 and
+        my > screenH-200 and my < screenH-100
+      then self:move(vel) end --up
+      if
+        mx > 100 and mx < 200 and
+        my > screenH-100 and my < screenH
+      then self:move(-vel) end --down
+      if
+        mx > 000 and mx < 100 and
+        my > screenH-100 and my < screenH
+      then self:rotate(-0.05) end --left
+      if
+        mx > 200 and mx < 300 and
+        my > screenH-100 and my < screenH
+      then self:rotate(0.05) end --right
     end
   end
 
@@ -86,47 +127,42 @@ function Particle.move(self, vel, axis)
 end
 
 function Particle.cast(self, targets)
-  if type(targets) ~= 'table' then
-    local pts = {}
-    for _, ray in ipairs(self.rays) do
-      local pt = ray:cast(targets)
-      if pt then table.insert(pts, pt) end
-    end
-    return pts
-  end
   local pts = {}
   for _, ray in ipairs(self.rays) do
-    local closest = nil
+
     local record = 1/0
+    local closest
+    local obj
+
     for _, target in ipairs(targets) do
-      for _, line in ipairs(target) do
-        local pt = ray:cast(line)
-        if pt then
-          local d = dist(
-            {
-              x = self.b:getX(),
-              y = self.b:getY()
-            }, pt)
-          if (d < record) then
-            record = d
-            closest = pt
-          end
+      local pt = ray:cast(target)
+
+      if pt then
+        local d = dist(
+          {
+            x = self.b:getX(),
+            y = self.b:getY()
+          }, pt
+        )
+
+        if (d < record) then
+          record = d
+          closest = pt
+          obj = target
         end
       end
     end
+
     if closest then
-      table.insert(pts, {closest, record})
+      table.insert(pts, {closest, record, obj})
     else
-      table.insert(pts, {false, false})
+      table.insert(pts, false)
     end
   end
   return pts
 end
 
 function Particle.draw(self)
-  for _, ray in ipairs(self.rays) do
-    ray:draw()
-  end
   love.graphics.setColor(0, 0, 0)
   love.graphics.circle('line', self.b:getX(), self.b:getY(), self.s:getRadius())
   love.graphics.setColor(1, 1, 1)
