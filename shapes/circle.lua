@@ -1,6 +1,6 @@
 local Circle = {}
 
-function Circle:new(world, x, y, r)
+function Circle:new(world, x, y, r, color)
   local circle = {}
 
   setmetatable(circle, self)
@@ -10,8 +10,18 @@ function Circle:new(world, x, y, r)
   circle.s = love.physics.newCircleShape(x, y, r)
   circle.f = love.physics.newFixture(circle.b, circle.s)
   circle.x, circle.y, circle.r = x, y, r
+  circle.color = color or {100,100,100}
 
   return circle
+end
+
+function Circle.calculeColor(self, d)
+  return {
+    self.color[1]*100/d,
+    self.color[2]*100/d,
+    self.color[3]*100/d,
+    1
+  }
 end
 
 function Circle.draw2d(self)
@@ -24,7 +34,7 @@ function Circle.draw3d(self, d, i)
   local pixelwidth = screenW/(RAYNUMBER*RAYPRECISION)
   local height = screenH*80/d
   local x1, y1 = pixelwidth*(i-1), (screenH - height) / 2
-  love.graphics.setColor(100/d, 100/d, 100/d)
+  love.graphics.setColor(self:calculeColor(d))
   love.graphics.polygon('fill',
     x1,            y1,
     x1+pixelwidth, y1,

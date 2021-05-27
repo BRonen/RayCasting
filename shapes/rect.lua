@@ -1,6 +1,6 @@
 local Rect = {}
 
-function Rect:new(world, x, y, w, h)
+function Rect:new(world, x, y, w, h, color)
   local rect = {}
 
   setmetatable(rect, self)
@@ -11,8 +11,18 @@ function Rect:new(world, x, y, w, h)
   rect.f = love.physics.newFixture(rect.b, rect.s)
   rect.x, rect.y = x, y
   rect.w, rect.h = w, h
+  rect.color = color or {100,100,100}
 
   return rect
+end
+
+function Rect.calculeColor(self, d)
+  return {
+    self.color[1]*100/d,
+    self.color[2]*100/d,
+    self.color[3]*100/d,
+    1
+  }
 end
 
 function Rect.draw2d(self)
@@ -25,7 +35,7 @@ function Rect.draw3d(self, d, i)
   local pixelwidth = screenW/(RAYNUMBER*RAYPRECISION)
   local height = screenH*80/d
   local x1, y1 = pixelwidth*(i-1), (screenH - height) / 2
-  love.graphics.setColor(100/d, 100/d, 100/d)
+  love.graphics.setColor(self:calculeColor(d))
   love.graphics.polygon('fill',
     x1,            y1,
     x1+pixelwidth, y1,
