@@ -144,6 +144,10 @@ function Particle.cast(self, targets)
             y = self.b:getY()
           }, pt
         )
+        
+        --remove fisheye effect
+        local a = self.angle - math.atan2(ray.dir.y, ray.dir.x)
+        d = d * math.cos(a)
 
         if (d < record) then
           record = d
