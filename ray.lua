@@ -15,6 +15,7 @@ function Ray:new(x, y, angle)
     x = math.cos(angle),
     y = math.sin(angle)
   }
+  ray.angle = angle
 
   return ray
 end

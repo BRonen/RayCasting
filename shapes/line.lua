@@ -15,11 +15,12 @@ function Line:new(world, x1, y1, x2, y2, color)
 end
 
 function Line.calculeColor(self, d)
+  d = d / 100
   return {
-    self.color[1]*100/d,
-    self.color[2]*100/d,
-    self.color[3]*100/d,
-    self.color[4]
+    self.color[1]/d,
+    self.color[2]/d,
+    self.color[3]/d,
+    1
   }
 end
 
@@ -31,16 +32,14 @@ function Line.draw3d(self, d, i)
   local screenW, screenH = love.graphics.getDimensions()
   local pixelwidth = screenW/(RAYNUMBER*RAYPRECISION)
   local height = screenH*80/d
-  local x1, y1 = pixelwidth*(i-1), (screenH - height) / 2
+  local x, y = pixelwidth*(i-1), (screenH - height) / 2
   love.graphics.setColor(self:calculeColor(d))
   love.graphics.polygon('fill',
-    x1,            y1,
-    x1+pixelwidth, y1,
-    x1+pixelwidth, y1+height,
-    x1,            y1+height
+    x,            y,
+    x+pixelwidth, y,
+    x+pixelwidth, y+height,
+    x,            y+height
   )
-  love.graphics.setColor(0, 0, 0)
-  love.graphics.rectangle('line', x1, y1, pixelwidth, height)
   love.graphics.setColor(1, 1, 1, 1)
 end
 

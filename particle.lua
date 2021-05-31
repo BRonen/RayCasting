@@ -1,4 +1,5 @@
 local Ray = require('ray')
+local Shot = require('shot')
 
 local function dist(xy1, xy2)
   local x1, y1 = xy1.x, xy1.y
@@ -21,6 +22,7 @@ function Particle:new(world, x, y)
 
   particle.angle = 0
 
+  particle.shots = {}
   particle.rays = {}
 
   for a = -RAYNUMBER/2, RAYNUMBER/2, 1/RAYPRECISION do
@@ -49,10 +51,11 @@ function Particle:new(world, x, y)
     if love.keyboard.isDown('e') then
       self:rotate(0.02)
     end
+    
+    local screenW, screenH = love.graphics.getDimensions()
 
     local id = love.touch.getTouches( )[1]
     if id then
-      local _, screenH = love.graphics.getDimensions()
       local x, y = love.touch.getPosition( id )
       if
         x > 100 and x < 200 and
@@ -70,6 +73,9 @@ function Particle:new(world, x, y)
         x > 200 and x < 300 and
         y > screenH-100 and y < screenH
       then self:rotate(0.05) end --right
+      if x > screenW/2 then
+        self:shot(world)
+      end --just testing yet
     end
     if Debug then
       local mx, my = love.mouse.getPosition( )
@@ -89,6 +95,9 @@ function Particle:new(world, x, y)
         mx > 200 and mx < 300 and
         my > screenH-100 and my < screenH
       then self:rotate(0.05) end --right
+      if mx > screenW/2 then
+        self:shot(world)
+      end --just testing yet
     end
   end
 
@@ -160,16 +169,41 @@ function Particle.cast(self, targets)
     if closest then
       table.insert(pts, {closest, record, obj})
     else
-      table.insert(pts, false)
+      table.insert(pts, {})
     end
   end
   return pts
 end
 
-function Particle.draw(self)
-  love.graphics.setColor(0, 0, 0)
-  love.graphics.circle('line', self.b:getX(), self.b:getY(), self.s:getRadius())
+function Particle.shot(self, World)
+  local px, py = self.b:getPosition()
+
+  --vectors
+  local angle = self.angle
+  local vec = {
+    x = math.cos(angle),
+    y = math.sin(angle)
+  }
+
+  local mag = math.sqrt(vec.x * vec.x + vec.y * vec.y)
+
+  vec.x = vec.x * 10 / mag
+  vec.y = vec.y * 10 / mag
+  
+  --avoid collision with player
+  local x = vec.x < 0 and -3 or 3
+  local y = vec.y < 0 and -3 or 3
+
+  local shot = Shot:new(World, px+x, py+y, 0.3, {1, 0, 0})
+  shot.f:setRestitution(1)
+  shot.b:applyForce(vec.x, vec.y)
+
+  table.insert(self.shots, shot)
+end
+
+function Particle.draw2D(self)
   love.graphics.setColor(1, 1, 1)
+  love.graphics.circle('fill', self.b:getX(), self.b:getY(), self.s:getRadius())
 end
 
 return Particle
